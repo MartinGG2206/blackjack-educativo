@@ -127,7 +127,7 @@
                             <span class="empty-state" th:if="${#lists.isEmpty(estadoJuego.manoJugador.cartas)}">Sin cartas.</span>
                             <span class="playing-card"
                                   th:each="carta : ${estadoJuego.manoJugador.cartas}"
-                                  th:classappend="${carta.palo.rojo} ? ' is-red'"
+                                  th:classappend="${carta.palo.esRojo()} ? ' is-red'"
                                   th:text="${carta.etiqueta}"></span>
                         </div>
                     </article>
@@ -148,7 +148,7 @@
                             <span class="empty-state" th:if="${estadoJuego.cartaVisibleDealer == null}">Sin carta.</span>
                             <span class="playing-card"
                                   th:if="${estadoJuego.cartaVisibleDealer != null}"
-                                  th:classappend="${estadoJuego.cartaVisibleDealer.palo.rojo} ? ' is-red'"
+                                  th:classappend="${estadoJuego.cartaVisibleDealer.palo.esRojo()} ? ' is-red'"
                                   th:text="${estadoJuego.cartaVisibleDealer.etiqueta}"></span>
                         </div>
                     </article>
@@ -169,7 +169,7 @@
                             <span class="empty-state" th:if="${#lists.isEmpty(estadoJuego.cartasDealerAdicionales)}">Sin cartas.</span>
                             <span class="playing-card"
                                   th:each="carta : ${estadoJuego.cartasDealerAdicionales}"
-                                  th:classappend="${carta.palo.rojo} ? ' is-red'"
+                                  th:classappend="${carta.palo.esRojo()} ? ' is-red'"
                                   th:text="${carta.etiqueta}"></span>
                         </div>
                     </article>
@@ -190,7 +190,7 @@
                             <span class="empty-state" th:if="${#lists.isEmpty(estadoJuego.cartasOtrosJugadores)}">Sin cartas.</span>
                             <span class="playing-card"
                                   th:each="carta : ${estadoJuego.cartasOtrosJugadores}"
-                                  th:classappend="${carta.palo.rojo} ? ' is-red'"
+                                  th:classappend="${carta.palo.esRojo()} ? ' is-red'"
                                   th:text="${carta.etiqueta}"></span>
                         </div>
                     </article>
@@ -211,7 +211,7 @@
                             <span class="empty-state" th:if="${#lists.isEmpty(estadoJuego.cartasVistas)}">Sin cartas.</span>
                             <span class="playing-card"
                                   th:each="carta : ${estadoJuego.cartasVistas}"
-                                  th:classappend="${carta.palo.rojo} ? ' is-red'"
+                                  th:classappend="${carta.palo.esRojo()} ? ' is-red'"
                                   th:text="${carta.etiqueta}"></span>
                         </div>
                     </article>
