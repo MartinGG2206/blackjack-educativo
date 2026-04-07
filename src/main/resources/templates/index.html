@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Blackjack Educativo</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="page-shell">
+    <header class="hero">
+        <div>
+            <p class="eyebrow">Mesa educativa online</p>
+            <h1>Blackjack Educativo</h1>
+            <p class="hero-copy">
+                Registra la mesa, revisa probabilidades al instante y juega comodo desde smartphone, tablet o desktop.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <article class="hero-stat">
+                <span>Mazos</span>
+                <strong th:text="${estadoJuego.numeroMazos}">6</strong>
+            </article>
+            <article class="hero-stat">
+                <span>Cartas restantes</span>
+                <strong th:text="${analisis.resultadoProbabilidades.totalCartasRestantes}">312</strong>
+            </article>
+            <article class="hero-stat">
+                <span>Historial</span>
+                <strong th:text="${#lists.size(historialVista)}">0</strong>
+            </article>
+        </div>
+    </header>
+
+    <section class="flash-stack">
+        <div class="flash flash-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="flash flash-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+    </section>
+
+    <section class="command-center panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Control rapido</p>
+                <h2>Zapato y ronda</h2>
+            </div>
+            <p class="panel-note" th:text="'Archivo de historial: ' + ${historialArchivo}"></p>
+        </div>
+        <div class="command-grid">
+            <form class="inline-form" method="post" th:action="@{/mesa/reiniciar}">
+                <label for="numeroMazos">Numero de mazos</label>
+                <div class="action-row">
+                    <select id="numeroMazos" name="numeroMazos">
+                        <option th:each="mazo : ${opcionesMazos}"
+                                th:value="${mazo}"
+                                th:selected="${mazo == estadoJuego.numeroMazos}"
+                                th:text="${mazo}"></option>
+                    </select>
+                    <button class="button button-muted" type="submit">Reiniciar zapato</button>
+                </div>
+            </form>
+
+            <form method="post" th:action="@{/mesa/nueva}">
+                <button class="button button-secondary button-block" type="submit">Nueva partida</button>
+            </form>
+
+            <a class="button button-ghost button-block" th:href="@{/}">Actualizar analisis</a>
+        </div>
+    </section>
+
+    <main class="dashboard-grid">
+        <section class="stack-column">
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Captura principal</p>
+                        <h2>Mesa actual</h2>
+                    </div>
+                    <p class="panel-note">Cada accion refresca el analisis al instante.</p>
+                </div>
+
+                <div class="capture-stack">
+                    <article class="capture-card">
+                        <div class="capture-copy">
+                            <h3>Tus cartas</h3>
+                            <p>Registra tu mano exacta con valor y palo.</p>
+                        </div>
+                        <form class="card-form" method="post" th:action="@{/cartas/jugador}">
+                            <select name="valor" aria-label="Valor carta jugador">
+                                <option th:each="valor : ${valores}" th:value="${valor}" th:text="${valor.etiqueta}"></option>
+                            </select>
+                            <select name="palo" aria-label="Palo carta jugador">
+                                <option th:each="palo : ${palos}" th:value="${palo}" th:text="${palo.nombre + ' ' + palo.simbolo}"></option>
+                            </select>
+                            <button class="button" type="submit">Agregar</button>
+                        </form>
+                        <div class="card-strip">
+                            <span class="empty-state" th:if="${#lists.isEmpty(estadoJuego.manoJugador.cartas)}">Sin cartas registradas.</span>
+                            <span class="playing-card"
+                                  th:each="carta : ${estadoJuego.manoJugador.cartas}"
+                                  th:classappend="${carta.palo.rojo} ? ' is-red'"
+                                  th:text="${carta.etiqueta}"></span>
+                        </div>
+                        <div class="mini-actions">
+                            <form method="post" th:action="@{/cartas/jugador/deshacer}">
+                                <button class="button button-ghost" type="submit">Deshacer ultima</button>
+                            </form>
+                            <form method="post" th:action="@{/cartas/jugador/limpiar}">
+                                <button class="button button-ghost" type="submit">Limpiar</button>
+                            </form>
+                        </div>
+                    </article>
+
+                    <article class="capture-card">
+                        <div class="capture-copy">
+                            <h3>Dealer visible</h3>
+                            <p>Solo una carta visible a la vez. Reemplazarla devuelve la anterior al zapato.</p>
+                        </div>
+                        <form class="card-form" method="post" th:action="@{/cartas/dealer-visible}">
+                            <select name="valor" aria-label="Valor carta dealer visible">
+                                <option th:each="valor : ${valores}" th:value="${valor}" th:text="${valor.etiqueta}"></option>
+                            </select>
+                            <select name="palo" aria-label="Palo carta dealer visible">
+                                <option th:each="palo : ${palos}" th:value="${palo}" th:text="${palo.nombre + ' ' + palo.simbolo}"></option>
+                            </select>
+                            <button class="button" type="submit">Establecer</button>
+                        </form>
+                        <div class="card-strip">
+                            <span class="empty-state" th:if="${estadoJuego.cartaVisibleDealer == null}">Sin carta visible.</span>
+                            <span class="playing-card"
+                                  th:if="${estadoJuego.cartaVisibleDealer != null}"
+                                  th:classappend="${estadoJuego.cartaVisibleDealer.palo.rojo} ? ' is-red'"
+                                  th:text="${estadoJuego.cartaVisibleDealer.etiqueta}"></span>
+                        </div>
+                        <div class="mini-actions">
+                            <form method="post" th:action="@{/cartas/dealer-visible/deshacer}">
+                                <button class="button button-ghost" type="submit">Quitar visible</button>
+                            </form>
+                            <form method="post" th:action="@{/cartas/dealer-visible/limpiar}">
+                                <button class="button button-ghost" type="submit">Limpiar</button>
+                            </form>
+                        </div>
+                    </article>
+
+                    <article class="capture-card">
+                        <div class="capture-copy">
+                            <h3>Dealer adicional</h3>
+                            <p>Agrega las cartas que va mostrando el dealer al cerrar la ronda.</p>
+                        </div>
+                        <form class="card-form" method="post" th:action="@{/cartas/dealer-adicional}">
+                            <select name="valor" aria-label="Valor carta dealer adicional">
+                                <option th:each="valor : ${valores}" th:value="${valor}" th:text="${valor.etiqueta}"></option>
+                            </select>
+                            <select name="palo" aria-label="Palo carta dealer adicional">
+                                <option th:each="palo : ${palos}" th:value="${palo}" th:text="${palo.nombre + ' ' + palo.simbolo}"></option>
+                            </select>
+                            <button class="button" type="submit">Agregar</button>
+                        </form>
+                        <div class="card-strip">
+                            <span class="empty-state" th:if="${#lists.isEmpty(estadoJuego.cartasDealerAdicionales)}">Sin cartas adicionales.</span>
+                            <span class="playing-card"
+                                  th:each="carta : ${estadoJuego.cartasDealerAdicionales}"
+                                  th:classappend="${carta.palo.rojo} ? ' is-red'"
+                                  th:text="${carta.etiqueta}"></span>
+                        </div>
+                        <div class="mini-actions">
+                            <form method="post" th:action="@{/cartas/dealer-adicional/deshacer}">
+                                <button class="button button-ghost" type="submit">Deshacer ultima</button>
+                            </form>
+                            <form method="post" th:action="@{/cartas/dealer-adicional/limpiar}">
+                                <button class="button button-ghost" type="submit">Limpiar</button>
+                            </form>
+                        </div>
+                    </article>
+
+                    <article class="capture-card">
+                        <div class="capture-copy">
+                            <h3>Otros jugadores</h3>
+                            <p>Cuenta las cartas abiertas de la mesa para ajustar el zapato restante.</p>
+                        </div>
+                        <form class="card-form" method="post" th:action="@{/cartas/otros}">
+                            <select name="valor" aria-label="Valor carta otros jugadores">
+                                <option th:each="valor : ${valores}" th:value="${valor}" th:text="${valor.etiqueta}"></option>
+                            </select>
+                            <select name="palo" aria-label="Palo carta otros jugadores">
+                                <option th:each="palo : ${palos}" th:value="${palo}" th:text="${palo.nombre + ' ' + palo.simbolo}"></option>
+                            </select>
+                            <button class="button" type="submit">Agregar</button>
+                        </form>
+                        <div class="card-strip">
+                            <span class="empty-state" th:if="${#lists.isEmpty(estadoJuego.cartasOtrosJugadores)}">Sin cartas abiertas.</span>
+                            <span class="playing-card"
+                                  th:each="carta : ${estadoJuego.cartasOtrosJugadores}"
+                                  th:classappend="${carta.palo.rojo} ? ' is-red'"
+                                  th:text="${carta.etiqueta}"></span>
+                        </div>
+                        <div class="mini-actions">
+                            <form method="post" th:action="@{/cartas/otros/deshacer}">
+                                <button class="button button-ghost" type="submit">Deshacer ultima</button>
+                            </form>
+                            <form method="post" th:action="@{/cartas/otros/limpiar}">
+                                <button class="button button-ghost" type="submit">Limpiar</button>
+                            </form>
+                        </div>
+                    </article>
+
+                    <article class="capture-card">
+                        <div class="capture-copy">
+                            <h3>Cartas vistas</h3>
+                            <p>Usa esta zona para cartas gastadas de rondas previas del mismo zapato.</p>
+                        </div>
+                        <form class="card-form" method="post" th:action="@{/cartas/vistas}">
+                            <select name="valor" aria-label="Valor carta vista">
+                                <option th:each="valor : ${valores}" th:value="${valor}" th:text="${valor.etiqueta}"></option>
+                            </select>
+                            <select name="palo" aria-label="Palo carta vista">
+                                <option th:each="palo : ${palos}" th:value="${palo}" th:text="${palo.nombre + ' ' + palo.simbolo}"></option>
+                            </select>
+                            <button class="button" type="submit">Agregar</button>
+                        </form>
+                        <div class="card-strip">
+                            <span class="empty-state" th:if="${#lists.isEmpty(estadoJuego.cartasVistas)}">Sin cartas acumuladas.</span>
+                            <span class="playing-card"
+                                  th:each="carta : ${estadoJuego.cartasVistas}"
+                                  th:classappend="${carta.palo.rojo} ? ' is-red'"
+                                  th:text="${carta.etiqueta}"></span>
+                        </div>
+                        <div class="mini-actions">
+                            <form method="post" th:action="@{/cartas/vistas/deshacer}">
+                                <button class="button button-ghost" type="submit">Deshacer ultima</button>
+                            </form>
+                            <form method="post" th:action="@{/cartas/vistas/limpiar}">
+                                <button class="button button-ghost" type="submit">Limpiar</button>
+                            </form>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </section>
+
+        <section class="stack-column">
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Analisis en vivo</p>
+                        <h2>Resumen de la mano</h2>
+                    </div>
+                </div>
+                <div class="summary-grid">
+                    <article class="summary-card">
+                        <span>Valor del jugador</span>
+                        <strong th:text="${analisis.valorJugador}">Sin cartas</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>Dealer visible</span>
+                        <strong th:text="${analisis.valorDealer}">Sin carta visible</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>Prob. de pasarte</span>
+                        <strong th:text="${probabilidadPasarseLabel}">0 %</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>Prob. de mejorar</span>
+                        <strong th:text="${probabilidadMejorarLabel}">0 %</strong>
+                    </article>
+                    <article class="summary-card">
+                        <span>Dealer completo</span>
+                        <strong th:text="${dealerCompleto}">Sin registro</strong>
+                    </article>
+                    <article class="summary-card summary-card-accent">
+                        <span>Accion sugerida</span>
+                        <strong th:text="${analisis.recomendacion.accion.etiqueta}">Pedir</strong>
+                    </article>
+                </div>
+            </section>
+
+            <section class="panel recommendation-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Lectura educativa</p>
+                        <h2>Recomendacion</h2>
+                    </div>
+                </div>
+                <p class="recommendation-copy" th:text="${analisis.recomendacion.explicacion}"></p>
+                <div class="observed-grid">
+                    <article>
+                        <span>Jugador</span>
+                        <strong th:text="${cartasJugadorTexto}">Sin registro</strong>
+                    </article>
+                    <article>
+                        <span>Otros</span>
+                        <strong th:text="${cartasOtrosTexto}">Sin registro</strong>
+                    </article>
+                    <article>
+                        <span>Vistas acumuladas</span>
+                        <strong th:text="${cartasVistasTexto}">Sin registro</strong>
+                    </article>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Probabilidades por valor</p>
+                        <h2>Si pides una carta</h2>
+                    </div>
+                </div>
+                <div class="probability-grid">
+                    <article class="probability-card"
+                             th:each="entrada : ${analisis.resultadoProbabilidades.entradas}"
+                             th:classappend="${entrada.sePasa} ? ' risk' : (${entrada.mejoraMano} ? ' improve' : '')">
+                        <header>
+                            <span th:text="${entrada.valorCarta.etiqueta}">A</span>
+                            <strong th:text="${#numbers.formatDecimal(entrada.probabilidad * 100, 1, 2) + '%'}">0%</strong>
+                        </header>
+                        <p th:text="'Restantes: ' + ${entrada.cartasRestantes}">Restantes: 0</p>
+                        <p th:text="'Total si sale: ' + ${entrada.totalSiPide}">Total si sale: 0</p>
+                        <div class="tag-row">
+                            <span class="tag tag-danger" th:if="${entrada.sePasa}">Te pasas</span>
+                            <span class="tag tag-success" th:if="${entrada.mejoraMano}">Mejora</span>
+                            <span class="tag tag-neutral" th:if="${!entrada.sePasa and !entrada.mejoraMano}">Neutra</span>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="panel sticky-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Cierre de ronda</p>
+                        <h2>Guardar resultado</h2>
+                    </div>
+                </div>
+                <div class="result-actions">
+                    <form method="post" th:action="@{/resultado/GANADA}">
+                        <button class="button button-win button-block"
+                                type="submit"
+                                th:disabled="${!estadoJuego.hayDatosMinimosParaAnalisis()}">Marcar gane</button>
+                    </form>
+                    <form method="post" th:action="@{/resultado/PERDIDA}">
+                        <button class="button button-loss button-block"
+                                type="submit"
+                                th:disabled="${!estadoJuego.hayDatosMinimosParaAnalisis()}">Marcar perdi</button>
+                    </form>
+                    <form method="post" th:action="@{/resultado/EMPATE}">
+                        <button class="button button-draw button-block"
+                                type="submit"
+                                th:disabled="${!estadoJuego.hayDatosMinimosParaAnalisis()}">Marcar empate</button>
+                    </form>
+                </div>
+                <p class="panel-note">Al guardar, la ronda actual pasa a cartas vistas para continuar con el mismo zapato.</p>
+            </section>
+
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Seguimiento</p>
+                        <h2>Historial reciente</h2>
+                    </div>
+                </div>
+                <div class="history-stack">
+                    <article class="history-card" th:each="registro : ${historialVista}">
+                        <div class="history-topline">
+                            <strong th:text="${registro.estado}">Ganada</strong>
+                            <span th:text="${registro.fechaHora}">2026-04-07 12:00</span>
+                        </div>
+                        <p th:text="'Jugador: ' + ${registro.cartasJugador}"></p>
+                        <p th:text="'Dealer: ' + ${registro.cartasDealer}"></p>
+                        <p th:text="'Otros: ' + ${registro.cartasOtros}"></p>
+                        <p th:text="'Recomendacion: ' + ${registro.recomendacion}"></p>
+                    </article>
+                    <p class="empty-state" th:if="${#lists.isEmpty(historialVista)}">Todavia no hay rondas guardadas.</p>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+</body>
+</html>
