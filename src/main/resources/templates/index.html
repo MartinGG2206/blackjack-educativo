@@ -62,11 +62,11 @@
                 </div>
 
                 <div class="group-tabs" id="groupTabs">
-                    <button class="group-tab is-active" type="button" data-group="jugador">Tus cartas</button>
-                    <button class="group-tab" type="button" data-group="dealer-visible">Dealer visible</button>
-                    <button class="group-tab" type="button" data-group="dealer-adicional">Dealer adicional</button>
-                    <button class="group-tab" type="button" data-group="otros">Otros</button>
-                    <button class="group-tab" type="button" data-group="vistas">Vistas</button>
+                    <button class="group-tab is-active" type="button" data-group="jugador" data-label="Tus cartas">Tus cartas</button>
+                    <button class="group-tab" type="button" data-group="dealer-visible" data-label="Dealer visible">Dealer visible</button>
+                    <button class="group-tab" type="button" data-group="dealer-adicional" data-label="Dealer adicional">Dealer adicional</button>
+                    <button class="group-tab" type="button" data-group="otros" data-label="Otros jugadores">Otros</button>
+                    <button class="group-tab" type="button" data-group="vistas" data-label="Cartas vistas">Vistas</button>
                 </div>
 
                 <div class="capture-status">
@@ -113,7 +113,7 @@
                 </div>
 
                 <div class="zone-grid">
-                    <article class="zone-card active-zone" data-zone-card="jugador">
+                    <article class="zone-card active-zone" data-zone-card="jugador" data-group="jugador">
                         <div class="zone-topline">
                             <h3>Tus cartas</h3>
                             <div class="zone-actions">
@@ -134,7 +134,7 @@
                         </div>
                     </article>
 
-                    <article class="zone-card" data-zone-card="dealer-visible">
+                    <article class="zone-card" data-zone-card="dealer-visible" data-group="dealer-visible">
                         <div class="zone-topline">
                             <h3>Dealer visible</h3>
                             <div class="zone-actions">
@@ -155,7 +155,7 @@
                         </div>
                     </article>
 
-                    <article class="zone-card" data-zone-card="dealer-adicional">
+                    <article class="zone-card" data-zone-card="dealer-adicional" data-group="dealer-adicional">
                         <div class="zone-topline">
                             <h3>Dealer adicional</h3>
                             <div class="zone-actions">
@@ -176,7 +176,7 @@
                         </div>
                     </article>
 
-                    <article class="zone-card" data-zone-card="otros">
+                    <article class="zone-card" data-zone-card="otros" data-group="otros">
                         <div class="zone-topline">
                             <h3>Otros jugadores</h3>
                             <div class="zone-actions">
@@ -197,7 +197,7 @@
                         </div>
                     </article>
 
-                    <article class="zone-card zone-card-wide" data-zone-card="vistas">
+                    <article class="zone-card zone-card-wide" data-zone-card="vistas" data-group="vistas">
                         <div class="zone-topline">
                             <h3>Cartas vistas</h3>
                             <div class="zone-actions">
@@ -335,24 +335,18 @@
 </div>
 
 <script>
-    (() => {
+    document.addEventListener('DOMContentLoaded', () => {
         const captureForm = document.getElementById('captureForm');
         const captureValue = document.getElementById('captureValue');
         const captureSuit = document.getElementById('captureSuit');
         const activeGroupLabel = document.getElementById('activeGroupLabel');
-        const groupLabels = {
-            'jugador': 'Tus cartas',
-            'dealer-visible': 'Dealer visible',
-            'dealer-adicional': 'Dealer adicional',
-            'otros': 'Otros jugadores',
-            'vistas': 'Cartas vistas'
-        };
 
         let activeGroup = 'jugador';
 
         const setActiveGroup = (group) => {
             activeGroup = group;
-            activeGroupLabel.textContent = groupLabels[group];
+            const currentTab = document.querySelector(`.group-tab[data-group="${group}"]`);
+            activeGroupLabel.textContent = currentTab ? currentTab.dataset.label : group;
             document.querySelectorAll('.group-tab').forEach((button) => {
                 button.classList.toggle('is-active', button.dataset.group === group);
             });
@@ -376,13 +370,26 @@
         document.querySelectorAll('.value-button').forEach((button) => {
             button.addEventListener('click', () => {
                 captureValue.value = button.dataset.value;
-                captureForm.action = '/cartas/' + activeGroup;
-                captureForm.submit();
+                captureForm.setAttribute('action', '/cartas/' + activeGroup);
+                if (typeof captureForm.requestSubmit === 'function') {
+                    captureForm.requestSubmit();
+                } else {
+                    captureForm.submit();
+                }
+            });
+        });
+
+        document.querySelectorAll('.zone-card').forEach((card) => {
+            card.addEventListener('click', (event) => {
+                if (event.target.closest('form')) {
+                    return;
+                }
+                setActiveGroup(card.dataset.group);
             });
         });
 
         setActiveGroup(activeGroup);
-    })();
+    });
 </script>
 </body>
 </html>
