@@ -82,25 +82,23 @@
                 </div>
 
                 <form id="captureForm" method="post" th:action="@{/cartas/jugador}">
-                    <input id="captureValue" type="hidden" name="valor" value="">
                     <input id="captureSuit" type="hidden" name="palo" value="CORAZONES">
+                    <div class="value-grid">
+                        <button class="value-button" type="submit" name="valor" value="AS" data-value="AS">As</button>
+                        <button class="value-button" type="submit" name="valor" value="DOS" data-value="DOS">2</button>
+                        <button class="value-button" type="submit" name="valor" value="TRES" data-value="TRES">3</button>
+                        <button class="value-button" type="submit" name="valor" value="CUATRO" data-value="CUATRO">4</button>
+                        <button class="value-button" type="submit" name="valor" value="CINCO" data-value="CINCO">5</button>
+                        <button class="value-button" type="submit" name="valor" value="SEIS" data-value="SEIS">6</button>
+                        <button class="value-button" type="submit" name="valor" value="SIETE" data-value="SIETE">7</button>
+                        <button class="value-button" type="submit" name="valor" value="OCHO" data-value="OCHO">8</button>
+                        <button class="value-button" type="submit" name="valor" value="NUEVE" data-value="NUEVE">9</button>
+                        <button class="value-button" type="submit" name="valor" value="DIEZ" data-value="DIEZ">10</button>
+                        <button class="value-button face-card" type="submit" name="valor" value="JOTA" data-value="JOTA">J</button>
+                        <button class="value-button face-card" type="submit" name="valor" value="REINA" data-value="REINA">Q</button>
+                        <button class="value-button face-card" type="submit" name="valor" value="REY" data-value="REY">K</button>
+                    </div>
                 </form>
-
-                <div class="value-grid">
-                    <button class="value-button" type="button" data-value="AS">As</button>
-                    <button class="value-button" type="button" data-value="DOS">2</button>
-                    <button class="value-button" type="button" data-value="TRES">3</button>
-                    <button class="value-button" type="button" data-value="CUATRO">4</button>
-                    <button class="value-button" type="button" data-value="CINCO">5</button>
-                    <button class="value-button" type="button" data-value="SEIS">6</button>
-                    <button class="value-button" type="button" data-value="SIETE">7</button>
-                    <button class="value-button" type="button" data-value="OCHO">8</button>
-                    <button class="value-button" type="button" data-value="NUEVE">9</button>
-                    <button class="value-button" type="button" data-value="DIEZ">10</button>
-                    <button class="value-button face-card" type="button" data-value="JOTA">J</button>
-                    <button class="value-button face-card" type="button" data-value="REINA">Q</button>
-                    <button class="value-button face-card" type="button" data-value="REY">K</button>
-                </div>
             </section>
 
             <section class="panel zone-panel">
@@ -337,7 +335,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const captureForm = document.getElementById('captureForm');
-        const captureValue = document.getElementById('captureValue');
         const captureSuit = document.getElementById('captureSuit');
         const activeGroupLabel = document.getElementById('activeGroupLabel');
 
@@ -347,11 +344,15 @@
             activeGroup = group;
             const currentTab = document.querySelector(`.group-tab[data-group="${group}"]`);
             activeGroupLabel.textContent = currentTab ? currentTab.dataset.label : group;
+            captureForm.setAttribute('action', '/cartas/' + group);
             document.querySelectorAll('.group-tab').forEach((button) => {
                 button.classList.toggle('is-active', button.dataset.group === group);
             });
             document.querySelectorAll('.zone-card').forEach((card) => {
                 card.classList.toggle('active-zone', card.dataset.zoneCard === group);
+            });
+            document.querySelectorAll('.value-button').forEach((button) => {
+                button.setAttribute('formaction', '/cartas/' + group);
             });
         };
 
@@ -364,18 +365,6 @@
                 captureSuit.value = button.dataset.suit;
                 document.querySelectorAll('.suit-button').forEach((item) => item.classList.remove('is-active'));
                 button.classList.add('is-active');
-            });
-        });
-
-        document.querySelectorAll('.value-button').forEach((button) => {
-            button.addEventListener('click', () => {
-                captureValue.value = button.dataset.value;
-                captureForm.setAttribute('action', '/cartas/' + activeGroup);
-                if (typeof captureForm.requestSubmit === 'function') {
-                    captureForm.requestSubmit();
-                } else {
-                    captureForm.submit();
-                }
             });
         });
 
